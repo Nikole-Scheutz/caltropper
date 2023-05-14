@@ -1,13 +1,11 @@
 use enigo::*;
 use std::{thread, time};
 
-#[allow(dead_code)]
 pub struct Caltropper {
     keyboard: Enigo,
     actions: Vec<String>,
     iterations: u32,
 }
-
 
 impl Caltropper {
     pub fn new() -> Caltropper {
@@ -50,13 +48,40 @@ impl Caltropper {
         }
     }
 
-    pub fn run_sequence(&mut self) {
-        for command_chunk in 0..self.actions.len() {
-            match command_chunk % 2 {
-                0 => println!("even pattern"),
-                1 => println!("odd pattern"),
+    fn move_character(&mut self, direction: &str) {
+        self.keyboard.key_sequence_parse(direction);
+    }
+
+    pub fn move_multiple(&mut self, directions: String) {
+        for direction in directions.chars() {
+            let direction = &direction.to_string();
+            self.move_character(direction);
+            wait_ms(25);
+        }
+    }
+
+    fn run_sequence_chunk(&mut self) {
+        let new_vec = self.actions.to_vec();
+        for (i, chunk) in new_vec.iter().enumerate() {
+            match i % 2 {
+                1 => {
+                    println!("moving: {:?}",chunk);
+                    let chunk = new_vec[i].clone();
+                    self.move_multiple(chunk);
+                },
+                0 => {
+                    println!("placing: {:?}",chunk);
+                    let chunk = new_vec[i].clone();
+                    self.place_multiple(chunk);
+                },
                 _ => panic!("Iterator not an integer!"),
             }
+        }
+    }
+
+    pub fn run_sequence(&mut self) {
+        for _iteration in 0..self.iterations {
+            self.run_sequence_chunk();
         }
     }
 }
