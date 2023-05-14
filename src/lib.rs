@@ -1,28 +1,6 @@
 use enigo::*;
 use std::{thread, time};
 
-pub fn send_key_presses(key_presses: &str) {
-    let mut keyboard = Enigo::new();
-
-    wait_ms(2500);
-
-    keyboard.set_delay(250);
-
-    keyboard.key_sequence_parse(key_presses);
-}
-
-pub enum Directions {
-    DownLeft = 1,
-    Down = 2,
-    DownRight = 3,
-    Left = 4,
-    Right = 6,
-    UpLeft = 7,
-    Up = 8,
-    UpRight = 9,
-    Center = 5,
-}
-
 #[allow(dead_code)]
 pub struct Caltropper {
     keyboard: Enigo,
@@ -30,32 +8,35 @@ pub struct Caltropper {
     iterations: u32,
 }
 
-pub fn command_parser(input: String) -> (Vec<String>, u32) {
-    let split_commands: Vec<&str> = input.split(".").collect();
-    let actions: Vec<&str> = split_commands[0].split(",").collect();
-    let iterations: u32 = split_commands[1].parse::<u32>().unwrap();
-    let mut better_actions = vec![];
-
-    for action in actions.iter() {
-        better_actions.push(action.to_string());
-    }
-
-
-    println!("Actions: {:?}", actions);
-    println!("Iterations: {}", iterations);
-
-    (better_actions, iterations)
-}
 
 impl Caltropper {
-    pub fn new(input: String) -> Caltropper {
+    pub fn new() -> Caltropper {
         let keyboard = Enigo::new();
-        let ( actions, iterations ) = command_parser(input);
+
+        let actions = vec![];
+        let iterations = 0;
 
         Caltropper { keyboard, actions, iterations }
     }
 
-    fn place_single(&mut self, direction: &str) {
+    pub fn generate_command_sequence(&mut self, input: String) {
+        let split_commands: Vec<&str> = input.split(".").collect();
+        let actions: Vec<&str> = split_commands[0].split(",").collect();
+        let iterations: u32 = split_commands[1].parse::<u32>().unwrap();
+
+        let mut better_actions = vec![];
+        for action in actions.iter() {
+            better_actions.push(action.to_string());
+        }
+
+        self.actions = better_actions;
+        self.iterations = iterations;
+
+        println!("Actions: {:?}", actions);
+        println!("Iterations: {}", iterations);
+    }
+
+    fn place(&mut self, direction: &str) {
         self.keyboard.key_sequence_parse("a/caltrops");
         self.keyboard.key_click(Key::Return);
         self.keyboard.key_sequence_parse(direction);
@@ -64,8 +45,18 @@ impl Caltropper {
     pub fn place_multiple(&mut self, directions: String) {
         for direction in directions.chars() {
             let direction = &direction.to_string();
-            self.place_single(direction);
+            self.place(direction);
             wait_ms(25);
+        }
+    }
+
+    pub fn run_sequence(&mut self) {
+        for command_chunk in 0..self.actions.len() {
+            match command_chunk % 2 {
+                0 => println!("even pattern"),
+                1 => println!("odd pattern"),
+                _ => panic!("Iterator not an integer!"),
+            }
         }
     }
 }
