@@ -1,21 +1,37 @@
 use enigo::*;
 use std::{thread, time};
 
+struct Delays {
+    search_ms: u64,
+    move_ms: u64,
+    generic_ms: u64,
+    inter_key_ns: u64,
+}
+
 pub struct Caltropper {
     keyboard: Enigo,
     actions: Vec<String>,
     iterations: u32,
+    delays: Delays,
 }
 
 impl Caltropper {
     pub fn new() -> Caltropper {
         let mut keyboard = Enigo::new();
-        keyboard.set_delay(12500);
 
         let actions = vec![];
         let iterations = 0;
 
-        Caltropper { keyboard, actions, iterations }
+        let delays = Delays {
+            search_ms: 75,
+            move_ms: 75,
+            generic_ms: 25,
+            inter_key_ns: 12500,
+        };
+
+        keyboard.set_delay(delays.inter_key_ns);
+
+        Caltropper { keyboard, actions, iterations, delays }
     }
 
     pub fn generate_command_sequence(&mut self, input: &str) {
@@ -35,14 +51,22 @@ impl Caltropper {
         println!("Iterations: {}", iterations);
     }
 
-    fn place(&mut self, direction: &str) {
+    fn search(&mut self, search_string: &str) {
         self.keyboard.key_sequence_parse("a/");
-        self.wait_ms(25);
-        self.keyboard.key_sequence_parse("caltrops");
-        self.wait_ms(75);
+        self.wait_ms(self.delays.generic_ms);
+
+        self.keyboard.key_sequence_parse(search_string);
+        self.wait_ms(self.delays.search_ms);
+
         self.keyboard.key_click(Key::Return);
-        self.wait_ms(25);
+        self.wait_ms(self.delays.generic_ms);
+
         self.keyboard.key_click(Key::Return);
+        self.wait_ms(self.delays.generic_ms);
+    }
+
+    fn place(&mut self, direction: &str) {
+        self.search("caltrop");
         self.keyboard.key_sequence_parse(direction);
     }
 
@@ -50,13 +74,13 @@ impl Caltropper {
         for direction in directions.chars() {
             let direction = &direction.to_string();
             self.place(direction);
-            self.wait_ms(25);
+            self.wait_ms(self.delays.generic_ms);
         }
     }
 
     fn move_character(&mut self, direction: &str) {
         self.keyboard.key_sequence_parse(direction);
-        self.wait_ms(75);
+        self.wait_ms(self.delays.move_ms);
     }
 
     pub fn move_multiple(&mut self, directions: String) {
