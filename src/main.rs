@@ -2,8 +2,8 @@ use caltropper::Caltropper;
 
 fn main() {
     let mut caltropper = Caltropper::new();
-    let sequence = "789,636,789,414.5".to_string();
-    caltropper::wait_ms(5000);
+    caltropper.wait_ms(5000);
+    let sequence = "789,636,789,414.2";
 
     caltropper.generate_command_sequence(sequence);
 

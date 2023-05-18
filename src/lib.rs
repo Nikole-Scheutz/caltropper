@@ -9,7 +9,8 @@ pub struct Caltropper {
 
 impl Caltropper {
     pub fn new() -> Caltropper {
-        let keyboard = Enigo::new();
+        let mut keyboard = Enigo::new();
+        keyboard.set_delay(12500);
 
         let actions = vec![];
         let iterations = 0;
@@ -17,7 +18,7 @@ impl Caltropper {
         Caltropper { keyboard, actions, iterations }
     }
 
-    pub fn generate_command_sequence(&mut self, input: String) {
+    pub fn generate_command_sequence(&mut self, input: &str) {
         let split_commands: Vec<&str> = input.split(".").collect();
         let actions: Vec<&str> = split_commands[0].split(",").collect();
         let iterations: u32 = split_commands[1].parse::<u32>().unwrap();
@@ -35,7 +36,12 @@ impl Caltropper {
     }
 
     fn place(&mut self, direction: &str) {
-        self.keyboard.key_sequence_parse("a/caltrops");
+        self.keyboard.key_sequence_parse("a/");
+        self.wait_ms(25);
+        self.keyboard.key_sequence_parse("caltrops");
+        self.wait_ms(75);
+        self.keyboard.key_click(Key::Return);
+        self.wait_ms(25);
         self.keyboard.key_click(Key::Return);
         self.keyboard.key_sequence_parse(direction);
     }
@@ -44,19 +50,19 @@ impl Caltropper {
         for direction in directions.chars() {
             let direction = &direction.to_string();
             self.place(direction);
-            wait_ms(25);
+            self.wait_ms(25);
         }
     }
 
     fn move_character(&mut self, direction: &str) {
         self.keyboard.key_sequence_parse(direction);
+        self.wait_ms(75);
     }
 
     pub fn move_multiple(&mut self, directions: String) {
         for direction in directions.chars() {
             let direction = &direction.to_string();
             self.move_character(direction);
-            wait_ms(25);
         }
     }
 
@@ -79,13 +85,18 @@ impl Caltropper {
         }
     }
 
+    pub fn set_delay(&mut self, desired_delay: u64) {
+        self.keyboard.set_delay(desired_delay);
+    }
+
     pub fn run_sequence(&mut self) {
         for _iteration in 0..self.iterations {
             self.run_sequence_chunk();
         }
     }
+
+    pub fn wait_ms(&self, ms: u64) {
+        thread::sleep(time::Duration::from_millis(ms));
+    }
 }
 
-pub fn wait_ms(ms: u64) {
-    thread::sleep(time::Duration::from_millis(ms));
-}
